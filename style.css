@@ -1,0 +1,15 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevents scrollbars when walking to edges */
+    background-color: #e0e0e0; /* Overcast sky base color */
+}
+
+canvas {
+    display: block;
+    /* Crucial: Forces crisp edges for low-resolution pixel art */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated; 
+}
