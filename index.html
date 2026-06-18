@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Muted Forest: Wonokromo Web</title>
+    <title>Muted Forest: Walkway</title>
     <style>
         body, html {
             margin: 0;
@@ -16,14 +16,10 @@
             overflow: hidden;
         }
 
-        /* 
-           This is the magic that makes it pixel art. 
-           It scales the low-res canvas up cleanly. 
-        */
         canvas {
             width: 100vw;
             height: 100vh;
-            object-fit: contain; /* Keeps the 16:9 aspect ratio */
+            object-fit: contain;
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
@@ -39,33 +35,36 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Force a low internal resolution for the "retro" look
     const GAME_WIDTH = 320;
     const GAME_HEIGHT = 180;
+    const WORLD_WIDTH = GAME_WIDTH * 3; 
+
     canvas.width = GAME_WIDTH;
     canvas.height = GAME_HEIGHT;
 
     // --- Color Palette ---
     const colors = {
-        sky: '#e0e5e5',       // Bright white/grey overcast
-        path: '#8f9593',      // Light grey stone
-        pathLine: '#7a807e',  // Tile outlines
-        fenceWood: '#5c2c16', // Reddish-brown
-        fenceBase: '#2b2b2b', // Dark grey base
-        muralBG: '#6c757d',   // Mesh base
-        muralTree: '#222',    // Dark silhouetted trees
-        monstera: '#153118',  // Dark green
-        structure: '#1a1a1a', // Dark roof
-        skin: '#e8b59b',      // Girl skin tone
-        hair: '#2c1e16',      // Girl hair
-        shirt: '#d9534f',     // Girl shirt
-        pants: '#33415c',     // Girl pants
-        sign: '#d2b48c',      // Arrow sign
-        signText: '#fff'      // Arrow text
+        sky: '#e0e5e5',
+        skyDark: '#8a9494',
+        path: '#8f9593',
+        pathLine: '#7a807e',
+        fenceWood: '#5c2c16',
+        fenceBase: '#2b2b2b',
+        muralBG: '#6c757d',
+        muralTree: '#222',
+        monstera: '#153118',
+        forestDeep: '#0d1c0f',
+        structure: '#1a1a1a',
+        speakerBox: '#222',
+        speakerCone: '#444',
+        skin: '#e8b59b',
+        hair: '#2c1e16',
+        shirt: '#d9534f',
+        pants: '#33415c',
+        sign: '#d2b48c'
     };
 
     // --- Procedural Pixel Art Generator ---
-    // Maps characters in an array to colors, drawing them pixel by pixel
     function drawSprite(spriteData, startX, startY, colorMap) {
         for (let row = 0; row < spriteData.length; row++) {
             for (let col = 0; col < spriteData[row].length; col++) {
@@ -78,7 +77,6 @@
         }
     }
 
-    // --- Sprite Designs ---
     const girlSprite = [
         "  HHHH  ",
         " HHHHHH ",
@@ -92,33 +90,22 @@
         "  P  P  "
     ];
 
-    const girlColors = {
-        'H': colors.hair,
-        'S': colors.skin,
-        'T': colors.shirt,
-        'P': colors.pants
-    };
+    // Normal colors for the girl
+    const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
+    
+    // Grey-ish silhouette colors (monochrome version)
+    const silhouetteColors = { 'H': '#a3a8a8', 'S': '#a3a8a8', 'T': '#a3a8a8', 'P': '#a3a8a8' };
 
-    const arrowSprite = [
-        "  W    ",
-        " WWWWW ",
-        "WWWWW  ",
-        " WWWWW ",
-        "  W    "
-    ];
-
-    const arrowColors = {
-        'W': colors.sign
-    };
-
-    // --- Player Logic ---
+    // --- State & Logic ---
     const player = {
-        x: GAME_WIDTH / 2,
+        x: 50, 
         y: GAME_HEIGHT - 30,
         speed: 1.5,
         dx: 0,
         dy: 0
     };
+
+    let cameraX = 0;
 
     const keys = { w: false, a: false, s: false, d: false };
 
@@ -138,72 +125,78 @@
 
     // --- Environment Drawing Functions ---
     function drawBackground() {
-        // Overcast Sky
-        ctx.fillStyle = colors.sky;
-        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
+        gradient.addColorStop(0, colors.sky);
+        gradient.addColorStop(0.7, colors.sky);
+        gradient.addColorStop(1, colors.skyDark);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, WORLD_WIDTH, GAME_HEIGHT);
 
-        // Dark roofed structure in the distance
-        ctx.fillStyle = colors.structure;
-        ctx.fillRect(200, 30, 80, 40);
-        
-        // Background Foliage (Blocky pixel clusters)
         ctx.fillStyle = '#2d4a22';
-        ctx.fillRect(0, 40, GAME_WIDTH, 50);
+        ctx.fillRect(0, 40, 400, 50); 
+        
+        ctx.fillStyle = colors.structure;
+        ctx.fillRect(200, 30, 80, 40); 
+        
         ctx.fillStyle = '#1e3814';
-        ctx.fillRect(50, 20, 40, 60);
-        ctx.fillRect(150, 35, 60, 55);
-        ctx.fillRect(280, 10, 40, 80);
+        ctx.fillRect(350, 20, 150, 60); 
+
+        ctx.fillStyle = colors.forestDeep;
+        ctx.fillRect(600, 0, 400, 100); 
+        ctx.fillStyle = '#132915';
+        ctx.fillRect(650, 20, 310, 80);
     }
 
     function drawFence() {
         const fenceY = 80;
         const fenceHeight = 50;
 
-        // Fence Base
         ctx.fillStyle = colors.fenceBase;
-        ctx.fillRect(0, fenceY + fenceHeight - 5, GAME_WIDTH, 5);
+        ctx.fillRect(0, fenceY + fenceHeight - 5, WORLD_WIDTH, 5);
 
-        for (let i = 0; i < GAME_WIDTH; i += 80) {
-            // Wood Section
+        for (let i = 0; i < WORLD_WIDTH; i += 80) {
             ctx.fillStyle = colors.fenceWood;
             ctx.fillRect(i, fenceY, 40, fenceHeight - 5);
             
-            // Wood details (vertical lines)
             ctx.fillStyle = '#4a2311';
             for(let j = i; j < i + 40; j += 4) {
                 ctx.fillRect(j, fenceY, 1, fenceHeight - 5);
             }
 
-            // Mesh / Mural Section
-            ctx.fillStyle = colors.muralBG;
-            ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
-            
-            // Procedural dark forest silhouettes on the mural
-            ctx.fillStyle = colors.muralTree;
-            ctx.fillRect(i + 45, fenceY + 10, 2, 35);
-            ctx.fillRect(i + 52, fenceY + 15, 1, 30);
-            ctx.fillRect(i + 65, fenceY + 5, 3, 40);
-            ctx.fillRect(i + 72, fenceY + 20, 1, 25);
-
-            // Arrow Sign
-            drawSprite(arrowSprite, i + 10, fenceY + 15, arrowColors);
+            if (i < 320) {
+                ctx.fillStyle = colors.muralBG;
+                ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
+                
+                ctx.fillStyle = colors.muralTree;
+                ctx.fillRect(i + 45, fenceY + 10, 2, 35);
+                ctx.fillRect(i + 52, fenceY + 15, 1, 30);
+                ctx.fillRect(i + 65, fenceY + 5, 3, 40);
+                ctx.fillRect(i + 72, fenceY + 20, 1, 25);
+            } else {
+                ctx.fillStyle = colors.fenceWood;
+                ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
+                ctx.fillStyle = '#2d4a22';
+                ctx.fillRect(i + 50, fenceY, 5, 40);
+                ctx.fillRect(i + 65, fenceY + 10, 4, 35);
+            }
         }
     }
 
     function drawWalkway() {
-        ctx.fillStyle = colors.path;
-        ctx.fillRect(0, 130, GAME_WIDTH, 50);
-
-        // Procedural tile lines to create a curved perspective
-        ctx.fillStyle = colors.pathLine;
+        const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
+        gradient.addColorStop(0, colors.path);
+        gradient.addColorStop(0.6, colors.path);
+        gradient.addColorStop(0.9, '#4a443b'); 
         
-        // Horizontal tile lines
-        ctx.fillRect(0, 140, GAME_WIDTH, 1);
-        ctx.fillRect(0, 155, GAME_WIDTH, 1);
-        ctx.fillRect(0, 175, GAME_WIDTH, 1);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 130, WORLD_WIDTH, 50);
 
-        // Vertical tile lines (curving)
-        for (let i = -100; i < GAME_WIDTH + 100; i += 30) {
+        ctx.fillStyle = colors.pathLine;
+        ctx.fillRect(0, 140, WORLD_WIDTH, 1);
+        ctx.fillRect(0, 155, WORLD_WIDTH, 1);
+        ctx.fillRect(0, 175, WORLD_WIDTH, 1);
+
+        for (let i = -100; i < WORLD_WIDTH + 100; i += 30) {
             ctx.beginPath();
             ctx.moveTo(i, 130);
             ctx.quadraticCurveTo(i + 20, 150, i + 50, 180);
@@ -211,24 +204,63 @@
         }
     }
 
-    function drawMonsteraForeground() {
+    // Midground: Things behind the foreground greens, but in front of the fence
+    function drawMidgroundElements() {
+        const ampX = 480;
+        const ampY = 70;
+        
+        ctx.fillStyle = colors.speakerBox;
+        ctx.fillRect(ampX, ampY, 40, 60); 
+        ctx.fillRect(ampX + 5, ampY - 30, 30, 30); 
+        
+        ctx.fillStyle = colors.speakerCone;
+        ctx.beginPath(); ctx.arc(ampX + 20, ampY + 15, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(ampX + 20, ampY + 45, 10, 0, Math.PI * 2); ctx.fill();
+        
+        ctx.fillStyle = '#111';
+        ctx.beginPath();
+        ctx.moveTo(ampX + 20, ampY + 60);
+        ctx.quadraticCurveTo(ampX + 40, 150, ampX - 20, 170);
+        ctx.stroke();
+    }
+
+    // This defines the exact shapes of the overgrowth for clipping
+    function defineForegroundPath() {
+        ctx.beginPath();
+        // Monstera bounding boxes (built in vertical strips to leave real gaps for splits)
+        ctx.rect(240, 120, 20, 60);
+        ctx.rect(260, 100, 10, 80);
+        ctx.rect(270, 100, 10, 60);
+        ctx.rect(270, 164, 10, 16);
+        ctx.rect(280, 100, 20, 40);
+        ctx.rect(280, 145, 20, 35);
+        
+        // Scene 3 deep forest foreground boxes
+        ctx.rect(750, 80, 80, 100);
+        ctx.rect(850, 60, 100, 120);
+        ctx.rect(680, 130, 40, 60);
+    }
+
+    // Foreground: Overgrowth that obscures the player
+    function drawForegroundElements() {
+        // We use the exact path we defined above to draw the solids
         ctx.fillStyle = colors.monstera;
-        
-        // Drawing blocky, pixelated leaves using precise rectangles
-        // Main body of the plant
-        ctx.fillRect(260, 100, 60, 80);
-        ctx.fillRect(240, 120, 30, 60);
-        
-        // Simulating the "splits" in the leaves by erasing parts
-        ctx.fillStyle = colors.path; // Match path color to erase over it
-        ctx.fillRect(280, 140, 20, 5);
-        ctx.fillRect(270, 160, 30, 4);
-        ctx.fillRect(250, 130, 15, 3);
+        ctx.fillRect(240, 120, 20, 60);
+        ctx.fillRect(260, 100, 10, 80);
+        ctx.fillRect(270, 100, 10, 60);
+        ctx.fillRect(270, 164, 10, 16);
+        ctx.fillRect(280, 100, 20, 40);
+        ctx.fillRect(280, 145, 20, 35);
+
+        ctx.fillStyle = colors.forestDeep;
+        ctx.fillRect(750, 80, 80, 100);
+        ctx.fillRect(850, 60, 100, 120);
+        ctx.fillRect(680, 130, 40, 60);
     }
 
     // --- Main Game Loop ---
     function update() {
-        // Calculate Movement
+        // Move Player
         if (keys.w) player.dy = -player.speed;
         else if (keys.s) player.dy = player.speed;
         else player.dy = 0;
@@ -240,23 +272,43 @@
         player.x += player.dx;
         player.y += player.dy;
 
-        // Boundaries
+        // Bounds
         if (player.x < 0) player.x = 0;
-        if (player.x > GAME_WIDTH - 8) player.x = GAME_WIDTH - 8;
-        if (player.y < 130 - 10) player.y = 130 - 10; // Stay below fence roughly
+        if (player.x > WORLD_WIDTH - 8) player.x = WORLD_WIDTH - 8;
+        if (player.y < 120) player.y = 120; 
         if (player.y > GAME_HEIGHT - 10) player.y = GAME_HEIGHT - 10;
 
-        // Render Everything
+        // Update Camera
+        cameraX = player.x - GAME_WIDTH / 2;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
+
+        // Clear and Render
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        
+        ctx.save();
+        ctx.translate(-cameraX, 0); // Shift world for camera
+        
+        // 1. Draw Background Layers
         drawBackground();
         drawFence();
         drawWalkway();
+        drawMidgroundElements();
         
-        // Draw the player using our text-array system
+        // 2. Draw Normal Player
         drawSprite(girlSprite, player.x, player.y, girlColors);
         
-        // Foreground elements sorted last to sit in front of the player
-        drawMonsteraForeground();
+        // 3. Draw Foreground (Covers Player)
+        drawForegroundElements();
+
+        // 4. Draw X-Ray Silhouette
+        ctx.save();
+        defineForegroundPath();
+        ctx.clip(); // Restrict the canvas so drawing only happens inside the foreground shapes
+        drawSprite(girlSprite, player.x, player.y, silhouetteColors); // Draw grey player
+        ctx.restore();
+        
+        ctx.restore();
 
         requestAnimationFrame(update);
     }
