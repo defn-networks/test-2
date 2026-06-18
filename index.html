@@ -49,18 +49,19 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: #e0e0e0;
-            padding: 12px 24px;
-            border: 2px solid #8a7a5a;
+            padding: 14px 28px;
+            border: 2px solid #c8a060;
             border-radius: 8px;
             font-size: 0.9rem;
-            max-width: 80%;
+            max-width: 85%;
             text-align: center;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: opacity 0.4s;
             opacity: 0;
             backdrop-filter: blur(4px);
+            z-index: 10;
         }
         #info-box.visible {
             opacity: 1;
@@ -94,77 +95,67 @@
         <small>a sound‑photography showcase by Karnivulgar</small>
     </div>
     <div id="info-box"></div>
-    <div class="controls-hint">← ↑ → ↓  walk · click objects</div>
+    <div class="controls-hint">← ↑ → ↓ walk · click sparkling objects</div>
 </div>
 
 <script>
     (function() {
-        // ----- setup canvas -----
         const canvas = document.getElementById('scene');
         const ctx = canvas.getContext('2d');
         const W = 800, H = 600;
-        const S = 2; // pixel scale
+        const S = 2;
 
-        // ----- game state -----
+        // ----- player -----
         const player = {
-            x: 380, y: 390,  // starting position (on path)
-            w: 12, h: 24,
+            x: 380, y: 390,
             speed: 1.5,
-            dir: 0, // 0=down, 1=left, 2=right, 3=up (for sprite)
+            dir: 0,
             moving: false,
             frame: 0,
             frameCounter: 0,
         };
         let keys = { left: false, right: false, up: false, down: false };
 
-        // ----- interactive hotspots -----
-        const hotspots = [];
+        // ----- interactive hotspots (with clearer labels and bigger areas) -----
+        const hotspots = [
+            {
+                x: 150, y: 250, w: 50, h: 40,
+                label: '📍 SIGNPOST: "Wonokromo"',
+                info: '🚶‍♀️ "Wonokromo" means "forest settlement". The path leads to a hidden forest fragment. Exhibition: 10 July 2026, IFI Surabaya. Free admission.'
+            },
+            {
+                x: 690, y: 450, w: 100, h: 100,
+                label: '🌿 MONSTERA PLANT',
+                info: '🌿 A large split‑leaf plant. A symbol of the dense, overlooked greenery that persists despite official classification as "0.0 ha forest". The forest is still standing.'
+            },
+            {
+                x: 290, y: 260, w: 60, h: 60,
+                label: '🌫️ MISTY FOREST MURAL',
+                info: '🌫️ Silhouette of a dark, misty forest. The mural reflects the invisible ecosystem — what data erases, art remembers. "The Deafening: Wonokromo" cinema piece documents this.'
+            },
+            {
+                x: 590, y: 120, w: 100, h: 70,
+                label: '🏛️ DISTANT STRUCTURE',
+                info: '🏛️ A dark‑roofed building — perhaps an old colonial remnant. The forest reclaims everything. The project asks: What does a forest mean when data says it does not exist?'
+            },
+            {
+                x: 370, y: 260, w: 50, h: 40,
+                label: '📍 DIRECTION SIGN',
+                info: '⬅️ Artist talk & exhibition: 10 July, IFI Surabaya. "Sound Art dan Ekologi Urban" — moderated discussion. Workshop: 5 July at KBS (Rp85k/pax).'
+            }
+        ];
 
-        // 1. sign near start (left arrow sign)
-        hotspots.push({
-            x: 160, y: 260, w: 30, h: 30,
-            label: 'Signpost',
-            info: '🚶‍♀️ "Wonokromo" — forest settlement. The path ahead leads to the hidden forest fragment. (Exhibition: 10 July 2026, IFI Surabaya)'
-        });
-        // 2. Monstera plant
-        hotspots.push({
-            x: 710, y: 480, w: 80, h: 80,
-            label: 'Monstera deliciosa',
-            info: '🌿 Large split‑leaf plant. A symbol of the dense, overlooked greenery that persists despite official classification as "0.0 ha forest".'
-        });
-        // 3. mesh panel with forest silhouette
-        hotspots.push({
-            x: 300, y: 270, w: 40, h: 50,
-            label: 'Misty forest mural',
-            info: '🌫️ Silhouette of a dark, misty forest. The mural reflects the invisible ecosystem — what data erases, art remembers.'
-        });
-        // 4. distant structure (dark roof)
-        hotspots.push({
-            x: 600, y: 130, w: 80, h: 50,
-            label: 'Structure',
-            info: '🏛️ Glimpse of a dark‑roofed building — perhaps an old colonial remnant. The forest reclaims everything.'
-        });
-        // 5. second signpost (further right)
-        hotspots.push({
-            x: 380, y: 270, w: 30, h: 30,
-            label: 'Direction sign',
-            info: '⬅️ The artist talk and exhibition: 10 July, IFI Surabaya. "Sound Art dan Ekologi Urban" — moderated discussion.'
-        });
-        // 6. the girl herself (interact to hear about the project)
-        // we'll handle this separately
+        // Add a special hotspot for the girl herself (we'll handle it separately)
 
         // ----- draw scene (pixel art) -----
         function drawScene() {
-            const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, W, H);
 
-            // ----- helper: pixel block -----
             function pixel(x, y, color) {
                 ctx.fillStyle = color;
                 ctx.fillRect(x * S, y * S, S, S);
             }
 
-            // ----- color palette -----
             const colors = {
                 sky: '#f5f5f0',
                 cloud: '#fafaf5',
@@ -196,11 +187,11 @@
                 wall: '#4a4a4a',
             };
 
-            // ---- sky ----
+            // sky
             ctx.fillStyle = colors.sky;
             ctx.fillRect(0, 0, W, H);
 
-            // ---- clouds (overcast) ----
+            // clouds
             for (let i = 0; i < 60; i++) {
                 let x = 10 + (i * 25) + Math.sin(i * 0.7) * 15;
                 let y = 20 + Math.sin(i * 1.2) * 8;
@@ -211,7 +202,7 @@
                 }
             }
 
-            // ---- far background: trees and structure ----
+            // distant trees
             function drawDistantTree(cx, cy, h, w, shade) {
                 for (let y = 0; y < h; y++) {
                     let spread = w * (1 - y / h * 0.7);
@@ -245,8 +236,7 @@
                 }
             }
 
-            // ---- fence ----
-            // base
+            // fence base
             for (let y = 300; y < 310; y++) {
                 for (let x = 50; x < 750; x++) {
                     let curve = Math.sin((x - 50) * 0.008) * 20;
@@ -256,14 +246,13 @@
                 }
             }
 
-            // panels
+            // fence panels
             for (let seg = 0; seg < 28; seg++) {
                 let xStart = 60 + seg * 24;
                 let curveOff = Math.sin((xStart - 50) * 0.008) * 20;
                 let yBase = 300 + curveOff;
 
                 if (seg % 2 === 0) {
-                    // wooden planks
                     for (let i = 0; i < 6; i++) {
                         let x = xStart + i * 4;
                         for (let y = yBase - 40; y < yBase; y++) {
@@ -271,7 +260,6 @@
                             pixel(x, y, shade);
                         }
                     }
-                    // arrow sign (every 4th)
                     if (seg % 4 === 0) {
                         let signX = xStart + 6;
                         let signY = yBase - 32;
@@ -286,7 +274,6 @@
                         }
                     }
                 } else {
-                    // mesh panel with forest silhouette
                     for (let y = yBase - 38; y < yBase; y++) {
                         for (let x = xStart; x < xStart + 22; x++) {
                             if ((x - xStart) % 3 === 0 || (y - (yBase - 38)) % 3 === 0) {
@@ -305,7 +292,6 @@
                             }
                         }
                     }
-                    // frame
                     for (let i = 0; i < 22; i++) {
                         pixel(xStart + i, yBase - 38, colors.meshFrame);
                         pixel(xStart + i, yBase - 1, colors.meshFrame);
@@ -317,7 +303,7 @@
                 }
             }
 
-            // ---- walkway ----
+            // walkway
             for (let y = 310; y < 480; y++) {
                 let curve = Math.sin((y - 310) * 0.02) * 30;
                 for (let x = 70 + curve; x < 730 + curve; x++) {
@@ -331,7 +317,7 @@
                 }
             }
 
-            // ---- foreground bushes ----
+            // foreground bushes
             function drawBush(cx, cy, w, h, shade) {
                 for (let y = 0; y < h; y++) {
                     let spread = w * (1 - y / h * 0.5);
@@ -346,7 +332,7 @@
             drawBush(100, 520, 70, 50, colors.leafMid);
             drawBush(40, 510, 60, 55, colors.leafLight);
 
-            // ---- Monstera plant (right foreground) ----
+            // Monstera
             function drawMonstera(cx, cy) {
                 for (let i = 0; i < 6; i++) {
                     let angle = -0.8 + i * 0.3;
@@ -372,7 +358,7 @@
             drawMonstera(720, 540);
             drawMonstera(740, 500);
 
-            // ---- more foreground leaves ----
+            // more foreground leaves
             for (let i = 0; i < 20; i++) {
                 let x = 680 + Math.random() * 100;
                 let y = 460 + Math.random() * 100;
@@ -381,31 +367,79 @@
                 }
             }
 
-            // ---- draw player (girl) ----
+            // ----- draw interactive hotspots (BIG, GLOWING, CLEAR) -----
+            const time = Date.now() / 1000;
+            for (let h of hotspots) {
+                // Draw a pulsing, semi-transparent circle that's very visible
+                const cx = (h.x + h.w/2) * S;
+                const cy = (h.y + h.h/2) * S;
+                const radius = Math.max(h.w, h.h) * S * 0.7;
+                const pulse = Math.sin(time * 2 + cx) * 0.15 + 0.85;
+
+                // outer glow
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * pulse);
+                grad.addColorStop(0, 'rgba(255, 220, 100, 0.6)');
+                grad.addColorStop(0.5, 'rgba(255, 200, 80, 0.25)');
+                grad.addColorStop(1, 'rgba(255, 200, 80, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // bright ring
+                ctx.strokeStyle = `rgba(255, 220, 100, ${0.5 + Math.sin(time * 2 + cx) * 0.2})`;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([6, 6]);
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * pulse * 0.8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // sparkle dots around the edge
+                for (let i = 0; i < 8; i++) {
+                    const angle = time + i * Math.PI / 4;
+                    const dist = radius * pulse * 0.9;
+                    const sx = cx + Math.cos(angle) * dist;
+                    const sy = cy + Math.sin(angle) * dist;
+                    ctx.fillStyle = `rgba(255, 255, 200, ${0.4 + Math.sin(time * 3 + i) * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // small label inside the hotspot
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(cx - 30, cy - 10, 60, 18);
+                ctx.fillStyle = '#ffddaa';
+                ctx.font = '8px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('⚡ CLICK', cx, cy + 2);
+            }
+
+            // ----- draw player (girl) -----
             drawGirl(player.x, player.y, player.dir);
 
-            // ---- draw hotspots (transparent overlays for debug, but we'll draw them as small indicators) ----
-            // We'll mark hotspots with subtle glowing dots so players know they can interact.
-            // We'll draw them after the girl so they're on top if needed.
-            for (let h of hotspots) {
-                // draw a small semi‑transparent circle to indicate interactivity
-                ctx.fillStyle = 'rgba(255, 220, 100, 0.3)';
-                ctx.beginPath();
-                ctx.arc((h.x + h.w/2) * S, (h.y + h.h/2) * S, 12, 0, Math.PI*2);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 220, 100, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            // Special indicator for the girl herself (clickable)
+            const px = player.x * S, py = player.y * S;
+            ctx.strokeStyle = 'rgba(255, 200, 255, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.arc(px, py - 20 * S, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(255, 200, 255, 0.15)';
+            ctx.beginPath();
+            ctx.arc(px, py - 20 * S, 18, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // ----- draw girl pixel art (with direction) -----
+        // ----- draw girl -----
         function drawGirl(x, y, dir) {
-            // dir: 0=down, 1=left, 2=right, 3=up (we'll use for walking animation)
-            // we'll just draw a static sprite for now but with facing
             const cx = x * S;
             const cy = y * S;
-            // body (dress)
+            // body
             for (let dy = 0; dy < 16; dy++) {
                 let width = 8 + Math.sin(dy * 0.5) * 3;
                 for (let dx = -width; dx < width; dx += 2) {
@@ -458,56 +492,52 @@
             ctx.fillRect(cx, cy - 16*S, S, S);
         }
 
-        // ----- interaction logic -----
+        // ----- interaction -----
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            const mouseX = (e.clientX - rect.left) * scaleX;
-            const mouseY = (e.clientY - rect.top) * scaleY;
-            return { x: mouseX / S, y: mouseY / S }; // convert to pixel coords
+            return {
+                x: (e.clientX - rect.left) * scaleX / S,
+                y: (e.clientY - rect.top) * scaleY / S
+            };
         }
 
         function checkHotspot(mx, my) {
+            // Check each hotspot
             for (let h of hotspots) {
                 if (mx >= h.x && mx <= h.x + h.w && my >= h.y && my <= h.y + h.h) {
                     return h;
                 }
             }
-            // check if clicked on girl (for self-reflection)
+            // Check if clicked on girl
             const px = player.x, py = player.y;
-            if (mx >= px-8 && mx <= px+8 && my >= py-28 && my <= py+4) {
-                return { label: 'Karnivulgar', info: '🎭 "The mask is not a symbol—it is a method. Noise is not music. Noise is an epistemology." — Muted Forest: Wonokromo, a counter‑archive of a forgotten forest.' };
+            if (mx >= px - 10 && mx <= px + 10 && my >= py - 30 && my <= py + 6) {
+                return {
+                    label: '🎭 KARNIVULGAR',
+                    info: '🎭 "The mask is not a symbol—it is a method. Noise is not music. Noise is an epistemology." — Muted Forest: Wonokromo is a counter‑archive of a forgotten forest. 16 years, 50+ releases, post‑human noise from Surabaya.'
+                };
             }
             return null;
         }
 
-        // ----- update player movement -----
+        // ----- update player -----
         function updatePlayer() {
             let dx = 0, dy = 0;
             if (keys.left) dx = -player.speed;
             if (keys.right) dx = player.speed;
             if (keys.up) dy = -player.speed;
             if (keys.down) dy = player.speed;
-            // normalize diagonal
-            if (dx !== 0 && dy !== 0) {
-                dx *= 0.707;
-                dy *= 0.707;
-            }
-            // move
+            if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
             let newX = player.x + dx;
             let newY = player.y + dy;
-            // bounds: stay within walkway and screen
-            // crude boundaries: keep within 70..730 and 320..470
             if (newX > 70 && newX < 730) player.x = newX;
             if (newY > 320 && newY < 470) player.y = newY;
-            // update direction
             if (dx > 0) player.dir = 2;
             else if (dx < 0) player.dir = 1;
             else if (dy < 0) player.dir = 3;
             else if (dy > 0) player.dir = 0;
             player.moving = (dx !== 0 || dy !== 0);
-            // animation frame
             if (player.moving) {
                 player.frameCounter++;
                 if (player.frameCounter > 6) {
@@ -526,7 +556,7 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // ----- event listeners -----
+        // ----- events -----
         document.addEventListener('keydown', (e) => {
             const key = e.key;
             if (key === 'ArrowLeft' || key === 'a') { keys.left = true; e.preventDefault(); }
@@ -542,7 +572,6 @@
             if (key === 'ArrowDown' || key === 's') { keys.down = false; e.preventDefault(); }
         });
 
-        // mouse click
         canvas.addEventListener('click', (e) => {
             const pos = getMousePos(e);
             const hit = checkHotspot(pos.x, pos.y);
@@ -550,25 +579,22 @@
             if (hit) {
                 infoBox.innerHTML = `<strong>${hit.label}</strong><br>${hit.info}`;
                 infoBox.classList.add('visible');
-                // auto-hide after 8 seconds
                 clearTimeout(window.infoTimeout);
                 window.infoTimeout = setTimeout(() => {
                     infoBox.classList.remove('visible');
-                }, 8000);
+                }, 10000);
             } else {
-                // if click on empty, hide info
                 infoBox.classList.remove('visible');
             }
         });
 
-        // mouse move to show cursor on hotspot
         canvas.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
             const hit = checkHotspot(pos.x, pos.y);
             canvas.style.cursor = hit ? 'pointer' : 'default';
         });
 
-        // ----- start game -----
+        // ----- start -----
         gameLoop();
     })();
 </script>
