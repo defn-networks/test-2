@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Muted Forest: Walkway</title>
     <style>
         body, html {
@@ -14,16 +14,71 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent; 
         }
 
         canvas {
             width: 100vw;
             height: 100vh;
-            object-fit: contain;
+            /* Object-fit is still here, but now the internal resolution will match the screen perfectly */
+            object-fit: contain; 
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             image-rendering: pixelated;
+            touch-action: none; 
+        }
+
+        /* --- Refined Mobile Controls --- */
+        #dpad {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            /* Shrunk down so it doesn't eat the whole screen */
+            width: 120px;
+            height: 120px;
+            display: grid;
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px 40px;
+            gap: 2px;
+            opacity: 0.35; /* More transparent */
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none; 
+        }
+
+        .dpad-btn {
+            background-color: #2b2b2b; 
+            color: #8f9593; 
+            border: 2px solid #1a1a1a;
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            border-radius: 4px;
+        }
+
+        .dpad-btn:active, .dpad-btn.active {
+            background-color: #6c757d;
+            color: #fff;
+            opacity: 1.0;
+        }
+
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 3; }
+
+        @media (min-width: 800px) {
+            #dpad { opacity: 0.2; }
         }
     </style>
 </head>
@@ -31,40 +86,57 @@
 
 <canvas id="gameCanvas"></canvas>
 
+<div id="dpad">
+    <div id="btn-up" class="dpad-btn">▲</div>
+    <div id="btn-left" class="dpad-btn">◀</div>
+    <div id="btn-right" class="dpad-btn">▶</div>
+    <div id="btn-down" class="dpad-btn">▼</div>
+</div>
+
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    const GAME_WIDTH = 320;
-    const GAME_HEIGHT = 180;
-    const WORLD_WIDTH = GAME_WIDTH * 3; 
+    // These are no longer static! They will adapt to the screen.
+    let GAME_WIDTH = 320; 
+    let GAME_HEIGHT = 180;
+    let WORLD_WIDTH = 960; 
 
-    canvas.width = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    // Dynamic Viewport System
+    function resizeCanvas() {
+        const screenAspect = window.innerWidth / window.innerHeight;
+        const baseAspect = 16 / 9;
+
+        if (screenAspect > baseAspect) {
+            // Ultra-wide mobile landscape. Expand the width to fill the black bars!
+            GAME_HEIGHT = 180;
+            GAME_WIDTH = Math.floor(GAME_HEIGHT * screenAspect);
+        } else {
+            // Normal 16:9 or narrower (iPad/Portrait)
+            GAME_WIDTH = 320;
+            GAME_HEIGHT = 180;
+        }
+
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+        
+        // Ensure the total world is always long enough
+        WORLD_WIDTH = Math.max(960, GAME_WIDTH * 3);
+    }
+
+    // Call it immediately, and listen for screen rotation
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     // --- Color Palette ---
     const colors = {
-        sky: '#e0e5e5',
-        skyDark: '#8a9494',
-        path: '#8f9593',
-        pathLine: '#7a807e',
-        fenceWood: '#5c2c16',
-        fenceBase: '#2b2b2b',
-        muralBG: '#6c757d',
-        muralTree: '#222',
-        monstera: '#153118',
-        forestDeep: '#0d1c0f',
-        structure: '#1a1a1a',
-        speakerBox: '#222',
-        speakerCone: '#444',
-        skin: '#e8b59b',
-        hair: '#2c1e16',
-        shirt: '#d9534f',
-        pants: '#33415c',
-        sign: '#d2b48c'
+        sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e',
+        fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222',
+        monstera: '#153118', monsteraDetail: '#0a170b', forestDeep: '#0d1c0f',
+        structure: '#1a1a1a', speakerBox: '#222', speakerCone: '#444',
+        skin: '#e8b59b', hair: '#2c1e16', shirt: '#d9534f', pants: '#33415c'
     };
 
-    // --- Procedural Pixel Art Generator ---
     function drawSprite(spriteData, startX, startY, colorMap) {
         for (let row = 0; row < spriteData.length; row++) {
             for (let col = 0; col < spriteData[row].length; col++) {
@@ -78,35 +150,16 @@
     }
 
     const girlSprite = [
-        "  HHHH  ",
-        " HHHHHH ",
-        " HHSSHH ",
-        "  SSSS  ",
-        "  TTTT  ",
-        " TTTTTT ",
-        " S TT S ",
-        "   PP   ",
-        "  P  P  ",
-        "  P  P  "
+        "  HHHH  ", " HHHHHH ", " HHSSHH ", "  SSSS  ", "  TTTT  ",
+        " TTTTTT ", " S TT S ", "   PP   ", "  P  P  ", "  P  P  "
     ];
 
-    // Normal colors for the girl
     const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
-    
-    // Grey-ish silhouette colors (monochrome version)
-    const silhouetteColors = { 'H': '#a3a8a8', 'S': '#a3a8a8', 'T': '#a3a8a8', 'P': '#a3a8a8' };
+    const silhouetteColors = { 'H': '#d0d6d6', 'S': '#d0d6d6', 'T': '#d0d6d6', 'P': '#d0d6d6' };
 
     // --- State & Logic ---
-    const player = {
-        x: 50, 
-        y: GAME_HEIGHT - 30,
-        speed: 1.5,
-        dx: 0,
-        dy: 0
-    };
-
+    const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
     let cameraX = 0;
-
     const keys = { w: false, a: false, s: false, d: false };
 
     window.addEventListener('keydown', (e) => {
@@ -115,13 +168,30 @@
         if (e.key === 's' || e.key === 'ArrowDown') keys.s = true;
         if (e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
     });
-
     window.addEventListener('keyup', (e) => {
         if (e.key === 'w' || e.key === 'ArrowUp') keys.w = false;
         if (e.key === 'a' || e.key === 'ArrowLeft') keys.a = false;
         if (e.key === 's' || e.key === 'ArrowDown') keys.s = false;
         if (e.key === 'd' || e.key === 'ArrowRight') keys.d = false;
     });
+
+    // Touch Setup
+    function setupTouchButton(buttonId, keyName) {
+        const btn = document.getElementById(buttonId);
+        const press = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
+        const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
+
+        btn.addEventListener('touchstart', press, { passive: false });
+        btn.addEventListener('touchend', release, { passive: false });
+        btn.addEventListener('touchcancel', release, { passive: false });
+        btn.addEventListener('mousedown', press);
+        btn.addEventListener('mouseup', release);
+        btn.addEventListener('mouseleave', release);
+    }
+    setupTouchButton('btn-up', 'w');
+    setupTouchButton('btn-left', 'a');
+    setupTouchButton('btn-down', 's');
+    setupTouchButton('btn-right', 'd');
 
     // --- Environment Drawing Functions ---
     function drawBackground() {
@@ -132,19 +202,12 @@
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, WORLD_WIDTH, GAME_HEIGHT);
 
-        ctx.fillStyle = '#2d4a22';
-        ctx.fillRect(0, 40, 400, 50); 
-        
-        ctx.fillStyle = colors.structure;
-        ctx.fillRect(200, 30, 80, 40); 
-        
-        ctx.fillStyle = '#1e3814';
-        ctx.fillRect(350, 20, 150, 60); 
+        ctx.fillStyle = '#2d4a22'; ctx.fillRect(0, 40, 400, 50); 
+        ctx.fillStyle = colors.structure; ctx.fillRect(200, 30, 80, 40); 
+        ctx.fillStyle = '#1e3814'; ctx.fillRect(350, 20, 150, 60); 
 
-        ctx.fillStyle = colors.forestDeep;
-        ctx.fillRect(600, 0, 400, 100); 
-        ctx.fillStyle = '#132915';
-        ctx.fillRect(650, 20, 310, 80);
+        ctx.fillStyle = colors.forestDeep; ctx.fillRect(600, 0, 400, 100); 
+        ctx.fillStyle = '#132915'; ctx.fillRect(650, 20, 310, 80);
     }
 
     function drawFence() {
@@ -157,27 +220,18 @@
         for (let i = 0; i < WORLD_WIDTH; i += 80) {
             ctx.fillStyle = colors.fenceWood;
             ctx.fillRect(i, fenceY, 40, fenceHeight - 5);
-            
             ctx.fillStyle = '#4a2311';
-            for(let j = i; j < i + 40; j += 4) {
-                ctx.fillRect(j, fenceY, 1, fenceHeight - 5);
-            }
+            for(let j = i; j < i + 40; j += 4) { ctx.fillRect(j, fenceY, 1, fenceHeight - 5); }
 
             if (i < 320) {
-                ctx.fillStyle = colors.muralBG;
-                ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
-                
+                ctx.fillStyle = colors.muralBG; ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
                 ctx.fillStyle = colors.muralTree;
-                ctx.fillRect(i + 45, fenceY + 10, 2, 35);
-                ctx.fillRect(i + 52, fenceY + 15, 1, 30);
-                ctx.fillRect(i + 65, fenceY + 5, 3, 40);
-                ctx.fillRect(i + 72, fenceY + 20, 1, 25);
+                ctx.fillRect(i + 45, fenceY + 10, 2, 35); ctx.fillRect(i + 52, fenceY + 15, 1, 30);
+                ctx.fillRect(i + 65, fenceY + 5, 3, 40); ctx.fillRect(i + 72, fenceY + 20, 1, 25);
             } else {
-                ctx.fillStyle = colors.fenceWood;
-                ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
+                ctx.fillStyle = colors.fenceWood; ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5);
                 ctx.fillStyle = '#2d4a22';
-                ctx.fillRect(i + 50, fenceY, 5, 40);
-                ctx.fillRect(i + 65, fenceY + 10, 4, 35);
+                ctx.fillRect(i + 50, fenceY, 5, 40); ctx.fillRect(i + 65, fenceY + 10, 4, 35);
             }
         }
     }
@@ -187,7 +241,6 @@
         gradient.addColorStop(0, colors.path);
         gradient.addColorStop(0.6, colors.path);
         gradient.addColorStop(0.9, '#4a443b'); 
-        
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 130, WORLD_WIDTH, 50);
 
@@ -204,63 +257,33 @@
         }
     }
 
-    // Midground: Things behind the foreground greens, but in front of the fence
     function drawMidgroundElements() {
-        const ampX = 480;
-        const ampY = 70;
-        
+        const ampX = 480, ampY = 70;
         ctx.fillStyle = colors.speakerBox;
-        ctx.fillRect(ampX, ampY, 40, 60); 
-        ctx.fillRect(ampX + 5, ampY - 30, 30, 30); 
-        
+        ctx.fillRect(ampX, ampY, 40, 60); ctx.fillRect(ampX + 5, ampY - 30, 30, 30); 
         ctx.fillStyle = colors.speakerCone;
         ctx.beginPath(); ctx.arc(ampX + 20, ampY + 15, 10, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(ampX + 20, ampY + 45, 10, 0, Math.PI * 2); ctx.fill();
-        
         ctx.fillStyle = '#111';
-        ctx.beginPath();
-        ctx.moveTo(ampX + 20, ampY + 60);
-        ctx.quadraticCurveTo(ampX + 40, 150, ampX - 20, 170);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ampX + 20, ampY + 60); ctx.quadraticCurveTo(ampX + 40, 150, ampX - 20, 170); ctx.stroke();
     }
 
-    // This defines the exact shapes of the overgrowth for clipping
     function defineForegroundPath() {
         ctx.beginPath();
-        // Monstera bounding boxes (built in vertical strips to leave real gaps for splits)
-        ctx.rect(240, 120, 20, 60);
-        ctx.rect(260, 100, 10, 80);
-        ctx.rect(270, 100, 10, 60);
-        ctx.rect(270, 164, 10, 16);
-        ctx.rect(280, 100, 20, 40);
-        ctx.rect(280, 145, 20, 35);
-        
-        // Scene 3 deep forest foreground boxes
-        ctx.rect(750, 80, 80, 100);
-        ctx.rect(850, 60, 100, 120);
-        ctx.rect(680, 130, 40, 60);
+        ctx.rect(240, 100, 60, 80);
+        ctx.rect(750, 80, 80, 100); ctx.rect(850, 60, 100, 120); ctx.rect(680, 130, 40, 60);
     }
 
-    // Foreground: Overgrowth that obscures the player
     function drawForegroundElements() {
-        // We use the exact path we defined above to draw the solids
-        ctx.fillStyle = colors.monstera;
-        ctx.fillRect(240, 120, 20, 60);
-        ctx.fillRect(260, 100, 10, 80);
-        ctx.fillRect(270, 100, 10, 60);
-        ctx.fillRect(270, 164, 10, 16);
-        ctx.fillRect(280, 100, 20, 40);
-        ctx.fillRect(280, 145, 20, 35);
-
+        ctx.fillStyle = colors.monstera; ctx.fillRect(240, 100, 60, 80);
+        ctx.fillStyle = colors.monsteraDetail;
+        ctx.fillRect(250, 120, 20, 2); ctx.fillRect(270, 140, 30, 3); ctx.fillRect(260, 160, 40, 2);
         ctx.fillStyle = colors.forestDeep;
-        ctx.fillRect(750, 80, 80, 100);
-        ctx.fillRect(850, 60, 100, 120);
-        ctx.fillRect(680, 130, 40, 60);
+        ctx.fillRect(750, 80, 80, 100); ctx.fillRect(850, 60, 100, 120); ctx.fillRect(680, 130, 40, 60);
     }
 
     // --- Main Game Loop ---
     function update() {
-        // Move Player
         if (keys.w) player.dy = -player.speed;
         else if (keys.s) player.dy = player.speed;
         else player.dy = 0;
@@ -272,44 +295,36 @@
         player.x += player.dx;
         player.y += player.dy;
 
-        // Bounds
         if (player.x < 0) player.x = 0;
         if (player.x > WORLD_WIDTH - 8) player.x = WORLD_WIDTH - 8;
         if (player.y < 120) player.y = 120; 
         if (player.y > GAME_HEIGHT - 10) player.y = GAME_HEIGHT - 10;
 
-        // Update Camera
+        // Dynamic Camera Bounds (Uses the dynamic GAME_WIDTH)
         cameraX = player.x - GAME_WIDTH / 2;
         if (cameraX < 0) cameraX = 0;
         if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
 
-        // Clear and Render
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-        
         ctx.save();
-        ctx.translate(-cameraX, 0); // Shift world for camera
+        ctx.translate(-cameraX, 0); 
         
-        // 1. Draw Background Layers
         drawBackground();
         drawFence();
         drawWalkway();
         drawMidgroundElements();
         
-        // 2. Draw Normal Player
         drawSprite(girlSprite, player.x, player.y, girlColors);
-        
-        // 3. Draw Foreground (Covers Player)
         drawForegroundElements();
 
-        // 4. Draw X-Ray Silhouette
         ctx.save();
         defineForegroundPath();
-        ctx.clip(); // Restrict the canvas so drawing only happens inside the foreground shapes
-        drawSprite(girlSprite, player.x, player.y, silhouetteColors); // Draw grey player
+        ctx.clip(); 
+        ctx.globalAlpha = 0.6; 
+        drawSprite(girlSprite, player.x, player.y, silhouetteColors); 
         ctx.restore();
         
         ctx.restore();
-
         requestAnimationFrame(update);
     }
 
