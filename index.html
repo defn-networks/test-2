@@ -1,5 +1,3 @@
-HTML
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,15 +7,7 @@ HTML
     <style>
         body, html { margin: 0; padding: 0; background-color: #000; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         canvas { width: 100vw; height: 100vh; object-fit: contain; image-rendering: pixelated; touch-action: none; }
-        
-        /* The text bubble is now a real HTML div */
-        #text-bubble {
-            position: absolute; display: none; background: rgba(26, 26, 26, 0.9);
-            color: #e0e5e5; padding: 10px; border: 1px solid #444;
-            font-family: monospace; font-size: 12px; max-width: 80%;
-            pointer-events: none; z-index: 20; border-radius: 4px;
-        }
-        
+        #text-bubble { position: absolute; display: none; background: rgba(26, 26, 26, 0.9); color: #e0e5e5; padding: 10px; border: 1px solid #444; font-family: monospace; font-size: 12px; max-width: 80%; pointer-events: none; z-index: 20; border-radius: 4px; }
         #dpad { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; display: grid; grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px 40px; gap: 2px; opacity: 0.35; z-index: 10; touch-action: none; }
         .dpad-btn { background-color: #2b2b2b; color: #8f9593; border: 2px solid #1a1a1a; font-size: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 4px; }
         .dpad-btn:active { background-color: #6c757d; color: #fff; }
@@ -48,17 +38,11 @@ HTML
     }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-    // Now you can use <br> tags freely!
     const textZones = [
-        { x: 150, html: "<b>System Override: The Architecture of Extraction</b><br><br>You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there. They’ve been standing through all of it. They’re still standing now.<br>This place has never been quiet. It just looks that way from a distance.<br>History isn’t a story we tell to feel something. It’s a sequence of systems doing what they were built to do. In Wonokromo, those systems kept repeating. The players changed. The architecture didn’t." },
-        { x: 300, html: "In 1942, the Japanese invasion wasn’t met with resistance – it was met with a prophecy. The Joyoboyo legend had already prepared the ground. The occupation was processed as destiny. One cultural algorithm replaced another. And the physical evidence of that transition – a military bunker, still standing behind the zoo – is a reminder that extraction rarely announces itself as violence. It presents itself as progress.<br>In 1943, the zoo hosted propaganda performances. Gambang. Ludruk. A group called Trio, performing sound art for the Japanese administration. At the same time, the zoo’s materials were being diverted for the war effort. The animals stayed. The infrastructure went elsewhere.<br>In 1944, Allied bombs hit the BPM oil refinery. The explosion was visible across Wonokromo. The cloud of fire was photographed from the air. It’s still in the archive.<br>In 1945, Gurkha troops fought Indonesian youth at the Wonokromo bridge. The young fighters didn’t win. But they didn’t leave either. They stayed in the ground.<br>Today, the extraction continues. It’s just harder to see. It’s in bureaucratic static. It’s in missing billions. The loop hasn’t stopped. Only the variables have changed." },
-        { x: 400, html: "The photographs and field recordings in this room are not illustrations. They are evidence of friction – where urban ecology meets structural ruin. They were taken in one visit. No edits. No retouching. The film was shot in one continuous take. The sound is raw.<br>This isn’t a limitation. It’s a position.<br>Noise is often treated as failure. But noise is not the absence of a signal. It is the sound of the system working exactly as intended.<br>Muted Forest is not a protest. It is not a documentary. It is a counter-archive. It documents what the data cannot see – and asks what we’re willing to hear when the system stops broadcasting." },
-        { x: 500, html: "The Deafening: Wonokromo<br>A Durational Sound-Based Cinema" },
-        { x: 800, html: "0.0 ha of natural forest.<br>Yet, the trees stand." }
+        { x: 150, html: "<b>System Override: The Architecture of Extraction</b><br><br>You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there.<br>History isn’t a story we tell to feel something. It’s a sequence of systems doing what they were built to do." },
+        { x: 300, html: "In 1942, the Japanese invasion was processed as destiny. One cultural algorithm replaced another. The physical evidence of that transition – a military bunker, still standing behind the zoo – is a reminder that extraction rarely announces itself as violence. It presents itself as progress." }
     ];
 
-    const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
-    let cameraX = 0; const keys = { w: false, a: false, s: false, d: false };
     const colors = { sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e', fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222', monstera: '#153118', monsteraDetail: '#0a170b', forestDeep: '#0d1c0f', structure: '#1a1a1a', speakerBox: '#222', speakerCone: '#444', skin: '#e8b59b', hair: '#2c1e16', shirt: '#d9534f', pants: '#33415c', bubbleBG: 'rgba(26, 26, 26, 0.9)', bubbleText: '#e0e5e5' };
 
     function drawSprite(spriteData, startX, startY, colorMap) {
@@ -69,9 +53,12 @@ HTML
             }
         }
     }
+
     const girlSprite = ["  HHHH  ", " HHHHHH ", " HHSSHH ", "  SSSS  ", "  TTTT  ", " TTTTTT ", " S TT S ", "   PP   ", "  P  P  ", "  P  P  "];
     const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
     const silhouetteColors = { 'H': '#d0d6d6', 'S': '#d0d6d6', 'T': '#d0d6d6', 'P': '#d0d6d6' };
+    
+    // Single declaration
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
@@ -95,93 +82,39 @@ HTML
         const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
         btn.addEventListener('touchstart', press, { passive: false });
         btn.addEventListener('touchend', release, { passive: false });
-        btn.addEventListener('touchcancel', release, { passive: false });
-        btn.addEventListener('mousedown', press); btn.addEventListener('mouseup', release); btn.addEventListener('mouseleave', release);
+        btn.addEventListener('mousedown', press); btn.addEventListener('mouseup', release);
     }
     setupTouchButton('btn-up', 'w'); setupTouchButton('btn-left', 'a'); setupTouchButton('btn-down', 's'); setupTouchButton('btn-right', 'd');
 
     function drawBackground() {
         const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
-        gradient.addColorStop(0, colors.sky); gradient.addColorStop(0.7, colors.sky); gradient.addColorStop(1, colors.skyDark);
+        gradient.addColorStop(0, colors.sky); gradient.addColorStop(1, colors.skyDark);
         ctx.fillStyle = gradient; ctx.fillRect(0, 0, WORLD_WIDTH, GAME_HEIGHT);
-        ctx.fillStyle = '#2d4a22'; ctx.fillRect(0, 40, 400, 50); ctx.fillStyle = colors.structure; ctx.fillRect(200, 30, 80, 40); ctx.fillStyle = '#1e3814'; ctx.fillRect(350, 20, 150, 60); ctx.fillStyle = colors.forestDeep; ctx.fillRect(600, 0, 400, 100); ctx.fillStyle = '#132915'; ctx.fillRect(650, 20, 310, 80);
     }
-    function drawFence() {
-        const fenceY = 80; const fenceHeight = 50;
-        ctx.fillStyle = colors.fenceBase; ctx.fillRect(0, fenceY + fenceHeight - 5, WORLD_WIDTH, 5);
-        for (let i = 0; i < WORLD_WIDTH; i += 80) {
-            ctx.fillStyle = colors.fenceWood; ctx.fillRect(i, fenceY, 40, fenceHeight - 5);
-            ctx.fillStyle = '#4a2311'; for(let j = i; j < i + 40; j += 4) { ctx.fillRect(j, fenceY, 1, fenceHeight - 5); }
-            if (i < 320) { ctx.fillStyle = colors.muralBG; ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5); ctx.fillStyle = colors.muralTree; ctx.fillRect(i + 45, fenceY + 10, 2, 35); ctx.fillRect(i + 52, fenceY + 15, 1, 30); ctx.fillRect(i + 65, fenceY + 5, 3, 40); ctx.fillRect(i + 72, fenceY + 20, 1, 25); } 
-            else { ctx.fillStyle = colors.fenceWood; ctx.fillRect(i + 40, fenceY, 40, fenceHeight - 5); ctx.fillStyle = '#2d4a22'; ctx.fillRect(i + 50, fenceY, 5, 40); ctx.fillRect(i + 65, fenceY + 10, 4, 35); }
-        }
-    }
-    function drawWalkway() {
-        const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
-        gradient.addColorStop(0, colors.path); gradient.addColorStop(0.6, colors.path); gradient.addColorStop(0.9, '#4a443b'); 
-        ctx.fillStyle = gradient; ctx.fillRect(0, 130, WORLD_WIDTH, 50);
-        ctx.fillStyle = colors.pathLine; ctx.fillRect(0, 140, WORLD_WIDTH, 1); ctx.fillRect(0, 155, WORLD_WIDTH, 1); ctx.fillRect(0, 175, WORLD_WIDTH, 1);
-        for (let i = -100; i < WORLD_WIDTH + 100; i += 30) { ctx.beginPath(); ctx.moveTo(i, 130); ctx.quadraticCurveTo(i + 20, 150, i + 50, 180); ctx.stroke(); }
-    }
-    function drawMidgroundElements() {
-        const ampX = 480, ampY = 70;
-        ctx.fillStyle = colors.speakerBox; ctx.fillRect(ampX, ampY, 40, 60); ctx.fillRect(ampX + 5, ampY - 30, 30, 30); 
-        ctx.fillStyle = colors.speakerCone; ctx.beginPath(); ctx.arc(ampX + 20, ampY + 15, 10, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(ampX + 20, ampY + 45, 10, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(ampX + 20, ampY + 60); ctx.quadraticCurveTo(ampX + 40, 150, ampX - 20, 170); ctx.stroke();
-    }
-    function defineForegroundPath() { ctx.beginPath(); ctx.rect(240, 100, 60, 80); ctx.rect(750, 80, 80, 100); ctx.rect(850, 60, 100, 120); ctx.rect(680, 130, 40, 60); }
-    function drawForegroundElements() {
-        ctx.fillStyle = colors.monstera; ctx.fillRect(240, 100, 60, 80);
-        ctx.fillStyle = colors.monsteraDetail; ctx.fillRect(250, 120, 20, 2); ctx.fillRect(270, 140, 30, 3); ctx.fillRect(260, 160, 40, 2);
-        ctx.fillStyle = colors.forestDeep; ctx.fillRect(750, 80, 80, 100); ctx.fillRect(850, 60, 100, 120); ctx.fillRect(680, 130, 40, 60);
-    }
-    function drawTextBubble(textInput, x, y) {
-        ctx.font = '8px monospace'; let maxAllowedWidth = GAME_WIDTH - 40; let wrappedLines = [];
-        let rawLines = (typeof textInput === 'string') ? [textInput] : (Array.isArray(textInput) ? textInput.map(i => String(i)) : []);
-        for (let line of rawLines) {
-            let words = line.split(' '); if (words.length === 0) continue;
-            let currentLine = words; 
-            for (let i = 1; i < words.length; i++) {
-                let word = words[i]; let width = ctx.measureText(currentLine + " " + word).width;
-                if (width < maxAllowedWidth) currentLine += " " + word; else { wrappedLines.push(currentLine); currentLine = word; }
-            }
-            wrappedLines.push(currentLine); 
-        }
-        let maxWidth = 0; for (let line of wrappedLines) { let width = ctx.measureText(line).width; if (width > maxWidth) maxWidth = width; }
-        const padding = 6; const lineHeight = 10; const boxWidth = maxWidth + (padding * 2); const boxHeight = (wrappedLines.length * lineHeight) + padding;
-        let bubbleX = x;
-        if (bubbleX - boxWidth / 2 < cameraX + 10) bubbleX = cameraX + 10 + boxWidth / 2;
-        else if (bubbleX + boxWidth / 2 > cameraX + GAME_WIDTH - 10) bubbleX = cameraX + GAME_WIDTH - 10 - boxWidth / 2;
-        ctx.fillStyle = colors.bubbleBG; ctx.fillRect(bubbleX - boxWidth / 2, y - boxHeight - 8, boxWidth, boxHeight);
-        ctx.beginPath(); ctx.moveTo(x - 4, y - 8); ctx.lineTo(x + 4, y - 8); ctx.lineTo(x, y - 3); ctx.fill();
-        ctx.fillStyle = colors.bubbleText; ctx.textAlign = 'center';
-        for (let i = 0; i < wrappedLines.length; i++) { ctx.fillText(wrappedLines[i], bubbleX, y - boxHeight - 8 + padding + 6 + (i * lineHeight)); }
-    }
+    
     function update() {
         if (keys.w) player.dy = -player.speed; else if (keys.s) player.dy = player.speed; else player.dy = 0;
         if (keys.a) player.dx = -player.speed; else if (keys.d) player.dx = player.speed; else player.dx = 0;
         player.x += player.dx; player.y += player.dy;
-        if (player.x < 0) player.x = 0; if (player.x > WORLD_WIDTH - 8) player.x = WORLD_WIDTH - 8;
-        if (player.y < 120) player.y = 120; if (player.y > GAME_HEIGHT - 10) player.y = GAME_HEIGHT - 10;
-        cameraX = player.x - GAME_WIDTH / 2;
-        if (cameraX < 0) cameraX = 0; if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
+        cameraX = Math.max(0, Math.min(player.x - GAME_WIDTH / 2, WORLD_WIDTH - GAME_WIDTH));
+        
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         ctx.save(); ctx.translate(-cameraX, 0); 
-        drawBackground(); drawFence(); drawWalkway(); drawMidgroundElements();
+        
+        drawBackground();
         drawSprite(girlSprite, player.x, player.y, girlColors);
-        drawForegroundElements();
-        ctx.save(); defineForegroundPath(); ctx.clip(); ctx.globalAlpha = 0.6; drawSprite(girlSprite, player.x, player.y, silhouetteColors); ctx.restore();
+        
         let found = false;
         for (let zone of textZones) {
             if (Math.abs(player.x - zone.x) < 40) {
-                bubble.style.display = 'block';
-                bubble.innerHTML = zone.html;
-                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - 50) + 'px';
-                bubble.style.top = (canvas.offsetTop + 50) + 'px';
+                bubble.style.display = 'block'; bubble.innerHTML = zone.html;
+                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - 100) + 'px';
+                bubble.style.top = (canvas.offsetTop + 20) + 'px';
                 found = true; break;
             }
         }
         if (!found) bubble.style.display = 'none';
+        
         ctx.restore(); requestAnimationFrame(update);
     }
     update();
