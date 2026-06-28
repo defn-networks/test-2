@@ -1,32 +1,43 @@
+HTML
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Muted Forest: Wonokromo by Karnivulgar</title>
+    <title>Muted Forest: Wonokromo</title>
     <style>
         body, html { margin: 0; padding: 0; background-color: #000; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-        canvas { width: 100vw; height: 100vh; object-fit: contain; image-rendering: -moz-crisp-edges; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: pixelated; touch-action: none; }
-        #dpad { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; display: grid; grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px 40px; gap: 2px; opacity: 0.35; z-index: 10; user-select: none; -webkit-user-select: none; touch-action: none; }
-        .dpad-btn { background-color: #2b2b2b; color: #8f9593; border: 2px solid #1a1a1a; font-family: monospace; font-size: 16px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; border-radius: 4px; }
-        .dpad-btn:active, .dpad-btn.active { background-color: #6c757d; color: #fff; opacity: 1.0; }
-        #btn-up { grid-column: 2; grid-row: 1; } #btn-left { grid-column: 1; grid-row: 2; } #btn-right { grid-column: 3; grid-row: 2; } #btn-down { grid-column: 2; grid-row: 3; }
-        @media (min-width: 800px) { #dpad { opacity: 0.2; } }
+        canvas { width: 100vw; height: 100vh; object-fit: contain; image-rendering: pixelated; touch-action: none; }
+        
+        /* The text bubble is now a real HTML div */
+        #text-bubble {
+            position: absolute; display: none; background: rgba(26, 26, 26, 0.9);
+            color: #e0e5e5; padding: 10px; border: 1px solid #444;
+            font-family: monospace; font-size: 12px; max-width: 80%;
+            pointer-events: none; z-index: 20; border-radius: 4px;
+        }
+        
+        #dpad { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; display: grid; grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px 40px; gap: 2px; opacity: 0.35; z-index: 10; touch-action: none; }
+        .dpad-btn { background-color: #2b2b2b; color: #8f9593; border: 2px solid #1a1a1a; font-size: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 4px; }
+        .dpad-btn:active { background-color: #6c757d; color: #fff; }
     </style>
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
-<div id="dpad">
-    <div id="btn-up" class="dpad-btn">▲</div>
-    <div id="btn-left" class="dpad-btn">◀</div>
-    <div id="btn-right" class="dpad-btn">▶</div>
-    <div id="btn-down" class="dpad-btn">▼</div>
-</div>
+    <div id="text-bubble"></div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="dpad">
+        <div id="btn-up" class="dpad-btn">▲</div>
+        <div id="btn-left" class="dpad-btn">◀</div>
+        <div id="btn-right" class="dpad-btn">▶</div>
+        <div id="btn-down" class="dpad-btn">▼</div>
+    </div>
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let GAME_WIDTH = 320; let GAME_HEIGHT = 180; let WORLD_WIDTH = 960; 
+    const bubble = document.getElementById('text-bubble');
 
+    let GAME_WIDTH = 320; let GAME_HEIGHT = 180; let WORLD_WIDTH = 960; 
     function resizeCanvas() {
         const screenAspect = window.innerWidth / window.innerHeight;
         const baseAspect = 16 / 9;
@@ -37,14 +48,17 @@
     }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
+    // Now you can use <br> tags freely!
     const textZones = [
-        { x: 150, lines: ["System Override: The Architecture of Extraction", "An Observation by Karnivulgar", "You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there. They’ve been standing through all of it. They’re still standing now.", "This place has never been quiet. It just looks that way from a distance.", "History isn’t a story we tell to feel something. It’s a sequence of systems doing what they were built to do. In Wonokromo, those systems kept repeating. The players changed. The architecture didn’t."] },
-        { x: 300, lines: ["In 1942, the Japanese invasion wasn’t met with resistance – it was met with a prophecy. The Joyoboyo legend had already prepared the ground. The occupation was processed as destiny. One cultural algorithm replaced another. And the physical evidence of that transition – a military bunker, still standing behind the zoo – is a reminder that extraction rarely announces itself as violence. It presents itself as progress.", "In 1943, the zoo hosted propaganda performances. Gambang. Ludruk. A group called Trio, performing sound art for the Japanese administration. At the same time, the zoo’s materials were being diverted for the war effort. The animals stayed. The infrastructure went elsewhere.", "In 1944, Allied bombs hit the BPM oil refinery. The explosion was visible across Wonokromo. The cloud of fire was photographed from the air. It’s still in the archive.", "In 1945, Gurkha troops fought Indonesian youth at the Wonokromo bridge. The young fighters didn’t win. But they didn’t leave either. They stayed in the ground.", "Today, the extraction continues. It’s just harder to see. It’s in bureaucratic static. It’s in missing billions. The loop hasn’t stopped. Only the variables have changed."] },
-        { x: 400, lines: ["The photographs and field recordings in this room are not illustrations. They are evidence of friction – where urban ecology meets structural ruin. They were taken in one visit. No edits. No retouching. The film was shot in one continuous take. The sound is raw.", "This isn’t a limitation. It’s a position.", "Noise is often treated as failure. But noise is not the absence of a signal. It is the sound of the system working exactly as intended.", "Muted Forest is not a protest. It is not a documentary. It is a counter-archive. It documents what the data cannot see – and asks what we’re willing to hear when the system stops broadcasting."] },
-        { x: 500, lines: ["The Deafening: Wonokromo", "A Durational Sound-Based Cinema"] },
-        { x: 800, lines: ["0.0 ha of natural forest.", "Yet, the trees stand."] }
+        { x: 150, html: "<b>System Override: The Architecture of Extraction</b><br><br>You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there. They’ve been standing through all of it. They’re still standing now.<br>This place has never been quiet. It just looks that way from a distance.<br>History isn’t a story we tell to feel something. It’s a sequence of systems doing what they were built to do. In Wonokromo, those systems kept repeating. The players changed. The architecture didn’t." },
+        { x: 300, html: "In 1942, the Japanese invasion wasn’t met with resistance – it was met with a prophecy. The Joyoboyo legend had already prepared the ground. The occupation was processed as destiny. One cultural algorithm replaced another. And the physical evidence of that transition – a military bunker, still standing behind the zoo – is a reminder that extraction rarely announces itself as violence. It presents itself as progress.<br>In 1943, the zoo hosted propaganda performances. Gambang. Ludruk. A group called Trio, performing sound art for the Japanese administration. At the same time, the zoo’s materials were being diverted for the war effort. The animals stayed. The infrastructure went elsewhere.<br>In 1944, Allied bombs hit the BPM oil refinery. The explosion was visible across Wonokromo. The cloud of fire was photographed from the air. It’s still in the archive.<br>In 1945, Gurkha troops fought Indonesian youth at the Wonokromo bridge. The young fighters didn’t win. But they didn’t leave either. They stayed in the ground.<br>Today, the extraction continues. It’s just harder to see. It’s in bureaucratic static. It’s in missing billions. The loop hasn’t stopped. Only the variables have changed." },
+        { x: 400, html: "The photographs and field recordings in this room are not illustrations. They are evidence of friction – where urban ecology meets structural ruin. They were taken in one visit. No edits. No retouching. The film was shot in one continuous take. The sound is raw.<br>This isn’t a limitation. It’s a position.<br>Noise is often treated as failure. But noise is not the absence of a signal. It is the sound of the system working exactly as intended.<br>Muted Forest is not a protest. It is not a documentary. It is a counter-archive. It documents what the data cannot see – and asks what we’re willing to hear when the system stops broadcasting." },
+        { x: 500, html: "The Deafening: Wonokromo<br>A Durational Sound-Based Cinema" },
+        { x: 800, html: "0.0 ha of natural forest.<br>Yet, the trees stand." }
     ];
 
+    const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
+    let cameraX = 0; const keys = { w: false, a: false, s: false, d: false };
     const colors = { sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e', fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222', monstera: '#153118', monsteraDetail: '#0a170b', forestDeep: '#0d1c0f', structure: '#1a1a1a', speakerBox: '#222', speakerCone: '#444', skin: '#e8b59b', hair: '#2c1e16', shirt: '#d9534f', pants: '#33415c', bubbleBG: 'rgba(26, 26, 26, 0.9)', bubbleText: '#e0e5e5' };
 
     function drawSprite(spriteData, startX, startY, colorMap) {
@@ -157,7 +171,17 @@
         drawSprite(girlSprite, player.x, player.y, girlColors);
         drawForegroundElements();
         ctx.save(); defineForegroundPath(); ctx.clip(); ctx.globalAlpha = 0.6; drawSprite(girlSprite, player.x, player.y, silhouetteColors); ctx.restore();
-        for (let zone of textZones) { if (Math.abs(player.x - zone.x) < 40) { drawTextBubble(zone.lines, player.x + 4, player.y - 5); break; } }
+        let found = false;
+        for (let zone of textZones) {
+            if (Math.abs(player.x - zone.x) < 40) {
+                bubble.style.display = 'block';
+                bubble.innerHTML = zone.html;
+                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - 50) + 'px';
+                bubble.style.top = (canvas.offsetTop + 50) + 'px';
+                found = true; break;
+            }
+        }
+        if (!found) bubble.style.display = 'none';
         ctx.restore(); requestAnimationFrame(update);
     }
     update();
