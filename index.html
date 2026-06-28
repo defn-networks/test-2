@@ -26,39 +26,23 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const bubble = document.getElementById('text-bubble');
+    let GAME_WIDTH = 320, GAME_HEIGHT = 180, WORLD_WIDTH = 960; 
 
-    let GAME_WIDTH = 320; let GAME_HEIGHT = 180; let WORLD_WIDTH = 960; 
     function resizeCanvas() {
         const screenAspect = window.innerWidth / window.innerHeight;
-        const baseAspect = 16 / 9;
-        if (screenAspect > baseAspect) { GAME_HEIGHT = 180; GAME_WIDTH = Math.floor(GAME_HEIGHT * screenAspect); } 
-        else { GAME_WIDTH = 320; GAME_HEIGHT = 180; }
+        GAME_WIDTH = screenAspect > (16/9) ? Math.floor(180 * screenAspect) : 320;
+        GAME_HEIGHT = 180;
         canvas.width = GAME_WIDTH; canvas.height = GAME_HEIGHT;
         WORLD_WIDTH = Math.max(960, GAME_WIDTH * 3);
     }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
     const textZones = [
-        { x: 150, html: "<b>System Override: The Architecture of Extraction</b><br><br>You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there.<br>History isn’t a story we tell to feel something. It’s a sequence of systems doing what they were built to do." },
-        { x: 300, html: "In 1942, the Japanese invasion was processed as destiny. One cultural algorithm replaced another. The physical evidence of that transition – a military bunker, still standing behind the zoo – is a reminder that extraction rarely announces itself as violence. It presents itself as progress." }
+        { x: 150, html: "<b>System Override: The Architecture of Extraction</b><br><br>You could call this a forest. Officially, you’d be wrong. The data says Surabaya has zero hectares of natural forest. But inside Kebun Binatang Surabaya, the trees are still there." },
+        { x: 300, html: "In 1942, the Japanese invasion was processed as destiny. One cultural algorithm replaced another. The bunker behind the zoo reminds us that extraction presents itself as progress." }
     ];
 
-    const colors = { sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e', fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222', monstera: '#153118', monsteraDetail: '#0a170b', forestDeep: '#0d1c0f', structure: '#1a1a1a', speakerBox: '#222', speakerCone: '#444', skin: '#e8b59b', hair: '#2c1e16', shirt: '#d9534f', pants: '#33415c', bubbleBG: 'rgba(26, 26, 26, 0.9)', bubbleText: '#e0e5e5' };
-
-    function drawSprite(spriteData, startX, startY, colorMap) {
-        for (let row = 0; row < spriteData.length; row++) {
-            for (let col = 0; col < spriteData[row].length; col++) {
-                const char = spriteData[row][col];
-                if (char !== ' ') { ctx.fillStyle = colorMap[char]; ctx.fillRect(Math.floor(startX + col), Math.floor(startY + row), 1, 1); }
-            }
-        }
-    }
-
-    const girlSprite = ["  HHHH  ", " HHHHHH ", " HHSSHH ", "  SSSS  ", "  TTTT  ", " TTTTTT ", " S TT S ", "   PP   ", "  P  P  ", "  P  P  "];
-    const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
-    const silhouetteColors = { 'H': '#d0d6d6', 'S': '#d0d6d6', 'T': '#d0d6d6', 'P': '#d0d6d6' };
-    
-    // Single declaration
+    const colors = { sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e', fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222', monstera: '#153118', forestDeep: '#0d1c0f', structure: '#1a1a1a' };
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
@@ -78,20 +62,23 @@
 
     function setupTouchButton(buttonId, keyName) {
         const btn = document.getElementById(buttonId);
-        const press = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
-        const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
-        btn.addEventListener('touchstart', press, { passive: false });
-        btn.addEventListener('touchend', release, { passive: false });
-        btn.addEventListener('mousedown', press); btn.addEventListener('mouseup', release);
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); }, { passive: false });
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); }, { passive: false });
+        btn.addEventListener('mousedown', () => { keys[keyName] = true; btn.classList.add('active'); });
+        btn.addEventListener('mouseup', () => { keys[keyName] = false; btn.classList.remove('active'); });
     }
     setupTouchButton('btn-up', 'w'); setupTouchButton('btn-left', 'a'); setupTouchButton('btn-down', 's'); setupTouchButton('btn-right', 'd');
 
     function drawBackground() {
-        const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
-        gradient.addColorStop(0, colors.sky); gradient.addColorStop(1, colors.skyDark);
-        ctx.fillStyle = gradient; ctx.fillRect(0, 0, WORLD_WIDTH, GAME_HEIGHT);
+        const grad = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
+        grad.addColorStop(0, colors.sky); grad.addColorStop(1, colors.skyDark);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, WORLD_WIDTH, GAME_HEIGHT);
     }
-    
+    function drawFence() {
+        ctx.fillStyle = colors.fenceBase; ctx.fillRect(0, 125, WORLD_WIDTH, 5);
+        for(let i=0; i<WORLD_WIDTH; i+=80) { ctx.fillStyle = colors.fenceWood; ctx.fillRect(i, 80, 40, 50); ctx.fillStyle = colors.muralBG; ctx.fillRect(i+40, 80, 40, 50); }
+    }
+
     function update() {
         if (keys.w) player.dy = -player.speed; else if (keys.s) player.dy = player.speed; else player.dy = 0;
         if (keys.a) player.dx = -player.speed; else if (keys.d) player.dx = player.speed; else player.dx = 0;
@@ -102,7 +89,8 @@
         ctx.save(); ctx.translate(-cameraX, 0); 
         
         drawBackground();
-        drawSprite(girlSprite, player.x, player.y, girlColors);
+        drawFence();
+        ctx.fillStyle = 'red'; ctx.fillRect(player.x, player.y, 8, 8);
         
         let found = false;
         for (let zone of textZones) {
