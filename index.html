@@ -42,7 +42,34 @@
         { x: 300, html: "In 1942, the Japanese invasion was processed as destiny. One cultural algorithm replaced another. The bunker behind the zoo reminds us that extraction presents itself as progress." }
     ];
 
-    const colors = { sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e', fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222', monstera: '#153118', forestDeep: '#0d1c0f', structure: '#1a1a1a' };
+    const colors = {
+        sky: '#e0e5e5', skyDark: '#8a9494', path: '#8f9593', pathLine: '#7a807e',
+        fenceWood: '#5c2c16', fenceBase: '#2b2b2b', muralBG: '#6c757d', muralTree: '#222',
+        monstera: '#153118', monsteraDetail: '#0a170b', forestDeep: '#0d1c0f',
+        structure: '#1a1a1a', speakerBox: '#222', speakerCone: '#444',
+        skin: '#e8b59b', hair: '#2c1e16', shirt: '#d9534f', pants: '#33415c',
+        bubbleBG: 'rgba(26, 26, 26, 0.9)', bubbleText: '#e0e5e5'
+    };
+
+    function drawSprite(spriteData, startX, startY, colorMap) {
+        for (let row = 0; row < spriteData.length; row++) {
+            for (let col = 0; col < spriteData[row].length; col++) {
+                const char = spriteData[row][col];
+                if (char !== ' ') {
+                    ctx.fillStyle = colorMap[char];
+                    ctx.fillRect(Math.floor(startX + col), Math.floor(startY + row), 1, 1);
+                }
+            }
+        }
+    }
+
+    const girlSprite = [
+        "  HHHH  ", " HHHHHH ", " HHSSHH ", "  SSSS  ", "  TTTT  ",
+        " TTTTTT ", " S TT S ", "   PP   ", "  P  P  ", "  P  P  "
+    ];
+    const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
+    const silhouetteColors = { 'H': '#d0d6d6', 'S': '#d0d6d6', 'T': '#d0d6d6', 'P': '#d0d6d6' };
+
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
