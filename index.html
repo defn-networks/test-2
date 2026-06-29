@@ -16,14 +16,24 @@
             image-rendering: crisp-edges; image-rendering: pixelated; touch-action: none; 
         }
         
-        /* Upgraded Text Bubble: Now supports scrolling if the text gets too long! */
+        /* Updated Text Bubble Style */
         #text-bubble {
-            position: absolute; display: none; background: rgba(26, 26, 26, 0.9);
-            color: #e0e5e5; padding: 15px; border: 1px solid #444;
-            font-family: monospace; font-size: 12px; max-width: 80%;
-            max-height: 70vh; overflow-y: auto; /* Adds a scrollbar if needed */
-            pointer-events: auto; /* Allows the user to touch and scroll the text */
-            z-index: 20; border-radius: 4px; box-sizing: border-box;
+            position: absolute; 
+            display: none; 
+            background: rgba(26, 26, 26, 0.95); /* Slightly more opaque for readability */
+            color: #e0e5e5; 
+            padding: 15px; 
+            border: 1px solid #444;
+            font-family: monospace; 
+            font-size: 12px; 
+            width: 80%;       /* Fixed width percentage */
+            max-height: 50vh; /* Force the bubble to be no taller than 50% of the screen */
+            overflow-y: auto; /* This tells the browser: if content > 50vh, enable scroll */
+            pointer-events: auto; /* Allows tapping/scrolling */
+            z-index: 20; 
+            border-radius: 4px; 
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch; /* Makes scrolling feel smooth on mobile */
         }
 
         #dpad {
