@@ -18,23 +18,28 @@
         
         /* Updated Text Bubble Style */
         #text-bubble {
-            position: absolute; 
-            display: none; 
-            background: rgba(26, 26, 26, 0.95); /* Slightly more opaque for readability */
-            color: #e0e5e5; 
-            padding: 15px; 
-            border: 1px solid #444;
-            font-family: monospace; 
-            font-size: 12px; 
-            width: 80%;       /* Fixed width percentage */
-            max-height: 50vh; /* Force the bubble to be no taller than 50% of the screen */
-            overflow-y: auto; /* This tells the browser: if content > 50vh, enable scroll */
-            pointer-events: auto; /* Allows tapping/scrolling */
-            z-index: 20; 
-            border-radius: 4px; 
-            box-sizing: border-box;
-            -webkit-overflow-scrolling: touch; /* Makes scrolling feel smooth on mobile */
-        }
+    position: absolute; 
+    display: none; 
+    background: rgba(26, 26, 26, 0.95);
+    color: #e0e5e5; 
+    padding: 20px; 
+    border: 1px solid #444;
+    font-family: monospace; 
+    font-size: 14px; 
+    /* New Centering Logic */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); /* This forces it to be perfectly centered */
+    max-width: 600px;
+    width: 80%;
+    max-height: 50vh; 
+    overflow-y: auto;
+    pointer-events: auto; 
+    z-index: 20; 
+    border-radius: 8px; 
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
 
         #dpad {
             position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px;
@@ -255,22 +260,16 @@
         ctx.restore();
 
         // --- Proximity Logic Check Using HTML Bubble ---
-        let found = false;
-        for (let zone of textZones) {
-            if (Math.abs(player.x - zone.x) < 40) {
-                bubble.style.display = 'block'; 
-                bubble.innerHTML = zone.html;
-                
-                // Position the HTML bubble dynamically based on the canvas location
-                // Moved slightly higher to ensure text isn't blocked by thumbs on mobile
-                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - (bubble.offsetWidth/2)) + 'px';
-                bubble.style.top = (canvas.offsetTop + 10) + 'px';
-                
-                found = true; 
-                break;
-            }
-        }
-        if (!found) bubble.style.display = 'none';
+let found = false;
+for (let zone of textZones) {
+    if (Math.abs(player.x - zone.x) < 40) {
+        bubble.style.display = 'block'; 
+        bubble.innerHTML = zone.html;
+        found = true; 
+        break;
+    }
+}
+if (!found) bubble.style.display = 'none';
 
         ctx.restore(); 
         requestAnimationFrame(update);
