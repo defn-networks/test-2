@@ -16,12 +16,14 @@
             image-rendering: crisp-edges; image-rendering: pixelated; touch-action: none; 
         }
         
-        /* The text bubble is now a real HTML div */
+        /* Upgraded Text Bubble: Now supports scrolling if the text gets too long! */
         #text-bubble {
             position: absolute; display: none; background: rgba(26, 26, 26, 0.9);
-            color: #e0e5e5; padding: 10px; border: 1px solid #444;
+            color: #e0e5e5; padding: 15px; border: 1px solid #444;
             font-family: monospace; font-size: 12px; max-width: 80%;
-            pointer-events: none; z-index: 20; border-radius: 4px;
+            max-height: 70vh; overflow-y: auto; /* Adds a scrollbar if needed */
+            pointer-events: auto; /* Allows the user to touch and scroll the text */
+            z-index: 20; border-radius: 4px; box-sizing: border-box;
         }
 
         #dpad {
@@ -36,18 +38,20 @@
             box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; border-radius: 4px;
         }
         .dpad-btn:active, .dpad-btn.active { background-color: #6c757d; color: #fff; opacity: 1.0; }
+        
         #btn-up { grid-column: 2; grid-row: 1; }
         #btn-left { grid-column: 1; grid-row: 2; }
         #btn-right { grid-column: 3; grid-row: 2; }
         #btn-down { grid-column: 2; grid-row: 3; }
+        
         @media (min-width: 800px) { #dpad { opacity: 0.2; } }
     </style>
 </head>
 <body>
 
 <div id="text-bubble"></div>
-
 <canvas id="gameCanvas"></canvas>
+
 <div id="dpad">
     <div id="btn-up" class="dpad-btn">▲</div>
     <div id="btn-left" class="dpad-btn">◀</div>
@@ -117,7 +121,8 @@
 
     const girlColors = { 'H': colors.hair, 'S': colors.skin, 'T': colors.shirt, 'P': colors.pants };
     const silhouetteColors = { 'H': '#d0d6d6', 'S': '#d0d6d6', 'T': '#d0d6d6', 'P': '#d0d6d6' };
-
+    
+    // (FIXED) Variables declared exactly ONCE here
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
@@ -139,6 +144,7 @@
         const btn = document.getElementById(buttonId);
         const press = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
         const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
+        
         btn.addEventListener('touchstart', press, { passive: false });
         btn.addEventListener('touchend', release, { passive: false });
         btn.addEventListener('touchcancel', release, { passive: false });
@@ -160,6 +166,7 @@
         ctx.fillStyle = colors.forestDeep; ctx.fillRect(600, 0, 400, 100); 
         ctx.fillStyle = '#132915'; ctx.fillRect(650, 20, 310, 80);
     }
+
     function drawFence() {
         const fenceY = 80; const fenceHeight = 50;
         ctx.fillStyle = colors.fenceBase; ctx.fillRect(0, fenceY + fenceHeight - 5, WORLD_WIDTH, 5);
@@ -177,6 +184,7 @@
             }
         }
     }
+
     function drawWalkway() {
         const gradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
         gradient.addColorStop(0, colors.path); gradient.addColorStop(0.6, colors.path); gradient.addColorStop(0.9, '#4a443b'); 
@@ -186,15 +194,18 @@
             ctx.beginPath(); ctx.moveTo(i, 130); ctx.quadraticCurveTo(i + 20, 150, i + 50, 180); ctx.stroke();
         }
     }
+
     function drawMidgroundElements() {
         const ampX = 480, ampY = 70;
         ctx.fillStyle = colors.speakerBox; ctx.fillRect(ampX, ampY, 40, 60); ctx.fillRect(ampX + 5, ampY - 30, 30, 30); 
         ctx.fillStyle = colors.speakerCone; ctx.beginPath(); ctx.arc(ampX + 20, ampY + 15, 10, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(ampX + 20, ampY + 45, 10, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(ampX + 20, ampY + 60); ctx.quadraticCurveTo(ampX + 40, 150, ampX - 20, 170); ctx.stroke();
     }
+
     function defineForegroundPath() {
         ctx.beginPath(); ctx.rect(240, 100, 60, 80); ctx.rect(750, 80, 80, 100); ctx.rect(850, 60, 100, 120); ctx.rect(680, 130, 40, 60);
     }
+
     function drawForegroundElements() {
         ctx.fillStyle = colors.monstera; ctx.fillRect(240, 100, 60, 80);
         ctx.fillStyle = colors.monsteraDetail; ctx.fillRect(250, 120, 20, 2); ctx.fillRect(270, 140, 30, 3); ctx.fillRect(260, 160, 40, 2);
@@ -242,8 +253,9 @@
                 bubble.innerHTML = zone.html;
                 
                 // Position the HTML bubble dynamically based on the canvas location
-                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - 100) + 'px';
-                bubble.style.top = (canvas.offsetTop + 20) + 'px';
+                // Moved slightly higher to ensure text isn't blocked by thumbs on mobile
+                bubble.style.left = (canvas.offsetLeft + (canvas.width/2) - (bubble.offsetWidth/2)) + 'px';
+                bubble.style.top = (canvas.offsetTop + 10) + 'px';
                 
                 found = true; 
                 break;
