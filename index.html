@@ -156,6 +156,7 @@ bubble.addEventListener('mousedown', function(e) {
     
     // (FIXED) Variables declared exactly ONCE here
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
+    let activeZone = null;
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
 
@@ -277,17 +278,29 @@ bubble.addEventListener('mousedown', function(e) {
         ctx.globalAlpha = 0.6; drawSprite(girlSprite, player.x, player.y, silhouetteColors); 
         ctx.restore();
 
-        // --- Proximity Logic Check Using HTML Bubble ---
-let found = false;
+        // --- Optimized Proximity Logic ---
+let foundZone = null;
 for (let zone of textZones) {
     if (Math.abs(player.x - zone.x) < 40) {
-        bubble.style.display = 'block'; 
-        bubble.innerHTML = zone.html;
-        found = true; 
+        foundZone = zone;
         break;
     }
 }
-if (!found) bubble.style.display = 'none';
+
+// Only update the bubble if the player has entered a NEW zone
+if (foundZone) {
+    if (activeZone !== foundZone) {
+        bubble.style.display = 'block';
+        bubble.innerHTML = foundZone.html;
+        activeZone = foundZone;
+    }
+} else {
+    // Only hide the bubble if the player has left the previous zone
+    if (activeZone !== null) {
+        bubble.style.display = 'none';
+        activeZone = null;
+    }
+}
 
         ctx.restore(); 
         requestAnimationFrame(update);
