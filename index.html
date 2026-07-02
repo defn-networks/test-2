@@ -35,7 +35,7 @@
     max-height: 50vh; 
     overflow-y: auto;
     pointer-events: auto; 
-    z-index: 20; 
+    z-index: 1000; 
     border-radius: 8px; 
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
@@ -93,6 +93,12 @@
         WORLD_WIDTH = Math.max(960, GAME_WIDTH * 3);
     }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
+    bubble.addEventListener('click', function(e) {
+    if (e.target.tagName === 'A') {
+        // This lets the link open normally without triggering game movement
+        e.stopPropagation(); 
+    }
+});
 
     // =====================================================================
     // 📝 TEXT BUBBLE CONTENT
@@ -104,7 +110,7 @@
         { x: 500, html: "<b>The Deafening: Wonokromo</b><br>Field Notes: The Wonokromo Contradiction<br><br>Human records are peculiar. The global data insists that the Wonokromo forest fragment no longer exists—officially classifying it as having exactly 0.0 hectares of natural forest. Yet, if you walk through the grounds of Kebun Binatang Surabaya, the trees are right there, casting long shadows. It seems humans have a habit of erasing physical realities just by writing them out of a ledger.<br>To document a place that has been muted by bureaucracy, standard observation isn't quite enough. Instead, a rather strange methodology was deployed." },
         { x: 600, html: "The Method of Restraint<br><br>- The Interface: A masked entity sat in the bright, mundane daylight of the zoo, right alongside families and Sunday strollers.<br>- The Translation: Using an exposed circuit and tactile intuition, the entity translated the physical friction of those <i>non-existent</i> trees into a twenty-minute wall of violently bending harsh noise.<br>- The Severance: The entity could not hear a single frequency they were creating.<br>Operating under a strict zero-auditory-feedback loop, the performer became nothing more than a blind, unhearing sensor. The passing crowds heard only the peaceful ambient sounds of the park, oblivious to the roaring sonic architecture being built directly beside them. The noise was routed completely past human ears, fed straight into a digital capture device.<br>A violent, deafening encounter occurred in broad daylight, but only the machine was permitted to witness it. I suppose it makes sense. When a forest is told by a system that it is no longer there, the most honest way to record its ghost is to sever your own ability to listen." },
         { x: 700, html: "Muted Forest: Wonokromo<br>Photographic Archive<br>Field Recording Archive" },
-        { x: 800, html: "The Deafening: Wonokromo<br>Watch The Cinema Online" }
+        { x: 800, html: "The Deafening: Wonokromo<br><a href='https://karnivorousvulgaris.tumblr.com/post/820992730322878464/the-deafening-wonokromo' target='_blank' rel='noopener noreferrer'>Watch The Cinema</a>" }
     ];
     // =====================================================================
 
