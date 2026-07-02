@@ -22,10 +22,10 @@
     display: none; 
     background: rgba(26, 26, 26, 0.95);
     color: #e0e5e5; 
-    padding: 20px; 
+    padding: 15px; 
     border: 1px solid #444;
     font-family: monospace; 
-    font-size: 14px; 
+    font-size: 12px; 
     /* New Centering Logic */
     left: 50%;
     top: 50%;
@@ -36,7 +36,7 @@
     overflow-y: auto;
     pointer-events: auto; 
     z-index: 1000; 
-    border-radius: 8px; 
+    border-radius: 4px; 
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
 }
@@ -78,6 +78,12 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const bubble = document.getElementById('text-bubble');
+    // This catches any click made inside the bubble and ensures it triggers the link
+bubble.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'A') {
+        e.stopPropagation(); // Stops the game engine from seeing the click
+    }
+});
 
     let GAME_WIDTH = 320; let GAME_HEIGHT = 180; let WORLD_WIDTH = 960; 
 
