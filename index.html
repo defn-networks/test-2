@@ -86,8 +86,8 @@
 
 <script>
     // Audio Setup (URLs)
-    const bgm = new Audio('https://github.com/defn-networks/test-2/blob/4a5a2bff803b1d4437d69cb49ff9b1d9af0e645b/ags_project-8-bit-219384.mp3'); // BGM URL
-    const stepSound = new Audio('https://github.com/defn-networks/test-2/blob/1a8055e640dc73019de3c553b27ab2be74f838df/footstep%20on%20concrete%204.mp3'); // Step URL
+    const bgm = new Audio('https://github.com/defn-networks/test-2/raw/main/ags_project-8-bit-219384.mp3'); // BGM URL
+    const stepSound = new Audio('https://github.com/defn-networks/test-2/raw/main/footstep%20on%20concrete%204.mp3'); // Step URL
     bgm.loop = true;
     bgm.volume = 0.5;
 
@@ -270,69 +270,63 @@ bubble.addEventListener('mousedown', function(e) {
 
     // --- Main Game Loop ---
     function update() {
-        if (hasStarted) {
+    // 1. Movement Logic (Only if game has started)
+    if (hasStarted) {
         if (keys.w) player.dy = -player.speed;
         else if (keys.s) player.dy = player.speed;
         else player.dy = 0;
-        
+
         if (keys.a) player.dx = -player.speed;
         else if (keys.d) player.dx = player.speed;
         else player.dx = 0;
+
         // Play step sound if moving
-            if (player.dx !== 0 || player.dy !== 0) {
-                stepCounter++;
-                if (stepCounter > 20) { stepSound.play(); stepCounter = 0; }
+        if (player.dx !== 0 || player.dy !== 0) {
+            stepCounter++;
+            if (stepCounter > 20) { stepSound.play(); stepCounter = 0; }
+        }
+        
         player.x += player.dx; player.y += player.dy;
         
+        // Bounds Checking
         if (player.x < 0) player.x = 0;
         if (player.x > WORLD_WIDTH - 8) player.x = WORLD_WIDTH - 8;
         if (player.y < 120) player.y = 120; 
         if (player.y > GAME_HEIGHT - 10) player.y = GAME_HEIGHT - 10;
-        
-        cameraX = player.x - GAME_WIDTH / 2;
-        if (cameraX < 0) cameraX = 0;
-        if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
-        
-        ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-        ctx.save();
-        ctx.translate(-cameraX, 0); 
-        
-        drawBackground(); drawFence(); drawWalkway(); drawMidgroundElements();
-        drawSprite(girlSprite, player.x, player.y, girlColors);
-        drawForegroundElements();
-        
-        ctx.save(); defineForegroundPath(); ctx.clip(); 
-        ctx.globalAlpha = 0.6; drawSprite(girlSprite, player.x, player.y, silhouetteColors); 
-        ctx.restore();
+    }
 
-        // --- Optimized Proximity Logic ---
-let foundZone = null;
-for (let zone of textZones) {
-    if (Math.abs(player.x - zone.x) < 40) {
-        foundZone = zone;
-        break;
-    }
-    }
-}
+    // 2. Camera Logic
+    cameraX = player.x - GAME_WIDTH / 2;
+    if (cameraX < 0) cameraX = 0;
+    if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
 
-// Only update the bubble if the player has entered a NEW zone
-if (foundZone) {
-    if (activeZone !== foundZone) {
-        bubble.style.display = 'block';
-        bubble.innerHTML = foundZone.html;
-        activeZone = foundZone;
-    }
-} else {
-    // Only hide the bubble if the player has left the previous zone
-    if (activeZone !== null) {
+    // 3. Drawing Logic
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    ctx.save();
+    ctx.translate(-cameraX, 0); 
+    drawBackground(); drawFence(); drawWalkway(); drawMidgroundElements();
+    drawSprite(girlSprite, player.x, player.y, girlColors);
+    drawForegroundElements();
+    ctx.save(); defineForegroundPath(); ctx.clip(); 
+    ctx.globalAlpha = 0.6; drawSprite(girlSprite, player.x, player.y, silhouetteColors); 
+    ctx.restore();
+
+    // 4. Proximity Logic
+    let foundZone = textZones.find(z => Math.abs(player.x - z.x) < 40);
+    if (foundZone) {
+        if (activeZone !== foundZone) {
+            bubble.style.display = 'block';
+            bubble.innerHTML = foundZone.html;
+            activeZone = foundZone;
+        }
+    } else if (activeZone !== null) {
         bubble.style.display = 'none';
         activeZone = null;
     }
+    
+    ctx.restore(); 
+    requestAnimationFrame(update);
 }
-
-        ctx.restore(); 
-        requestAnimationFrame(update);
-    }
     
     update();
 </script>
