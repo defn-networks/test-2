@@ -15,6 +15,15 @@
             image-rendering: -moz-crisp-edges; image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges; image-rendering: pixelated; touch-action: none; 
         }
+
+        /* Start Overlay */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 99999;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
+        #start-btn { padding: 20px 40px; border: 1px solid #e0e5e5; color: #e0e5e5; font-family: monospace; background: transparent; cursor: pointer; font-size: 20px; }
+        #start-btn:hover { background: #e0e5e5; color: #000; }
         
         /* Updated Text Bubble Style */
         #text-bubble {
@@ -64,6 +73,7 @@
 </head>
 <body>
 
+    <div id="start-overlay"><button id="start-btn">START</button></div>
 <div id="text-bubble"></div>
 <canvas id="gameCanvas"></canvas>
 
@@ -75,6 +85,19 @@
 </div>
 
 <script>
+    // Audio Setup (Replace with your actual URLs)
+    const bgm = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Change to your BGM URL
+    const stepSound = new Audio('https://actions.google.com/sounds/v1/foley/footsteps_creaky_floor.ogg'); // Change to your Step URL
+    bgm.loop = true;
+    bgm.volume = 0.5;
+
+    let hasStarted = false;
+    document.getElementById('start-btn').addEventListener('click', () => {
+        document.getElementById('start-overlay').style.display = 'none';
+        bgm.play();
+        hasStarted = true;
+    });
+    
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const bubble = document.getElementById('text-bubble');
@@ -156,7 +179,7 @@ bubble.addEventListener('mousedown', function(e) {
     
     // (FIXED) Variables declared exactly ONCE here
     const player = { x: 50, y: 150, speed: 1.5, dx: 0, dy: 0 };
-    let activeZone = null;
+    let activeZone = null; let stepCounter = 0;
     let cameraX = 0;
     const keys = { w: false, a: false, s: false, d: false };
 
@@ -247,6 +270,7 @@ bubble.addEventListener('mousedown', function(e) {
 
     // --- Main Game Loop ---
     function update() {
+        if (hasStarted) {
         if (keys.w) player.dy = -player.speed;
         else if (keys.s) player.dy = player.speed;
         else player.dy = 0;
@@ -254,7 +278,10 @@ bubble.addEventListener('mousedown', function(e) {
         if (keys.a) player.dx = -player.speed;
         else if (keys.d) player.dx = player.speed;
         else player.dx = 0;
-        
+        // Play step sound if moving
+            if (player.dx !== 0 || player.dy !== 0) {
+                stepCounter++;
+                if (stepCounter > 20) { stepSound.play(); stepCounter = 0; }
         player.x += player.dx; player.y += player.dy;
         
         if (player.x < 0) player.x = 0;
@@ -284,6 +311,7 @@ for (let zone of textZones) {
     if (Math.abs(player.x - zone.x) < 40) {
         foundZone = zone;
         break;
+    }
     }
 }
 
